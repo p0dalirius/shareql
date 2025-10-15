@@ -1,0 +1,116 @@
+# shareql complete rules set
+
+# =============================================================================
+# basic deny rules
+# =============================================================================
+
+DENY ANY
+DENY EXPLORATION
+DENY PROCESSING
+
+# =============================================================================
+# deny rules with conditions
+# =============================================================================
+
+DENY PROCESSING IF FILE.PATH MATCHES REGEX("*backup*")
+DENY PROCESSING IF FILE.PATH MATCHES "ee"
+DENY PROCESSING IF FILE.SIZE >= 1500
+DENY PROCESSING IF FILE.SIZE <= 1500
+DENY PROCESSING IF FILE.PATH MATCHES "C:/temp/*"
+DENY PROCESSING IF FILE.CREATED_AT >= 1680000000
+DENY EXPLORATION IF DIRECTORY.NAME MATCHES "admin"
+DENY EXPLORATION IF DIRECTORY.MODIFIED_AT <= 1670000000
+DENY PROCESSING IF DIRECTORY.PATH MATCHES "C:/private/*"
+DENY PROCESSING IF DIRECTORY.CREATED_AT >= 1680000000
+
+# =============================================================================
+# basic allow rules
+# =============================================================================
+
+ALLOW ANY
+ALLOW EXPLORATION
+ALLOW PROCESSING
+
+# =============================================================================
+# allow rules with conditions
+# =============================================================================
+
+ALLOW PROCESSING IF FILE.PATH MATCHES REGEX("*backup*")
+ALLOW PROCESSING IF FILE.PATH MATCHES "ee"
+ALLOW PROCESSING IF FILE.SIZE >= 1500
+ALLOW PROCESSING IF FILE.SIZE <= 1500
+ALLOW PROCESSING IF FILE.PATH MATCHES "C:/users/*"
+ALLOW PROCESSING IF FILE.CREATED_AT <= 1680000000
+ALLOW EXPLORATION IF DIRECTORY.NAME MATCHES "public"
+ALLOW EXPLORATION IF DIRECTORY.PATH MATCHES "C:/shared/*"
+ALLOW PROCESSING IF DIRECTORY.CREATED_AT <= 1680000000
+
+# =============================================================================
+# combined conditions with multiple operators
+# =============================================================================
+
+DENY PROCESSING IF FILE.PATH MATCHES "backup" AND FILE.SIZE >= 1000
+DENY PROCESSING IF FILE.PATH MATCHES REGEX("*backup*") AND FILE.SIZE >= 1000
+ALLOW PROCESSING IF FILE.PATH MATCHES "document" AND FILE.SIZE <= 500
+ALLOW PROCESSING IF FILE.PATH MATCHES REGEX(".*document.*") AND FILE.SIZE <= 500
+DENY PROCESSING IF DIRECTORY.NAME MATCHES "temp" AND FILE.SIZE >= 1000
+ALLOW EXPLORATION IF DIRECTORY.PATH MATCHES "C:/shared" AND FILE.SIZE <= 1000
+DENY PROCESSING IF FILE.PATH MATCHES "large" AND FILE.SIZE >= 2000
+ALLOW PROCESSING IF FILE.PATH MATCHES "small" AND FILE.SIZE <= 100
+
+# =============================================================================
+# not operator examples
+# =============================================================================
+
+DENY PROCESSING IF NOT FILE.PATH MATCHES "backup"
+ALLOW EXPLORATION IF NOT DIRECTORY.NAME IN ["admin", "system"]
+DENY PROCESSING IF FILE.SIZE >= 1000 AND NOT FILE.NAME IN ["readme.txt", "license.txt"]
+
+# =============================================================================
+# multiple nested conditions
+# =============================================================================
+
+ALLOW PROCESSING IF ((FILE.PATH MATCHES "backup" AND FILE.SIZE >= 1000) OR (FILE.PATH MATCHES "veeam" AND FILE.SIZE >= 1000))
+DENY PROCESSING IF ((FILE.PATH MATCHES "temp" OR FILE.SIZE >= 1000) AND FILE.MODIFIED_AT >= 133339)
+DENY EXPLORATION IF ((DIRECTORY.NAME MATCHES "private" OR DIRECTORY.PATH MATCHES "C:/private") AND NOT DIRECTORY.MODIFIED_AT < 1670000000)
+
+# =============================================================================
+# file name in list examples
+# =============================================================================
+
+DENY PROCESSING IF FILE.NAME IN ["backup.exe", "temp.dll", "cache.bat"]
+ALLOW PROCESSING IF FILE.NAME IN ["document.pdf", "report.docx", "presentation.pptx"]
+DENY EXPLORATION IF DIRECTORY.NAME IN [".git", ".env", "config.ini"]
+ALLOW EXPLORATION IF DIRECTORY.NAME IN ["public", "shared", "documents"]
+
+# =============================================================================
+# security-focused rules
+# =============================================================================
+
+DENY PROCESSING IF FILE.PATH MATCHES "password" OR FILE.PATH MATCHES "secret"
+DENY PROCESSING IF FILE.NAME IN ["password", "secret", "key", "token", "credential"]
+DENY EXPLORATION IF DIRECTORY.NAME MATCHES "admin" OR DIRECTORY.PATH MATCHES "C:/system"
+
+# =============================================================================
+# media and document files
+# =============================================================================
+
+ALLOW PROCESSING IF FILE.PATH MATCHES ".jpg" OR FILE.PATH MATCHES ".png" OR FILE.PATH MATCHES ".mp4"
+ALLOW PROCESSING IF FILE.NAME IN ["report.pdf", "presentation.pptx", "spreadsheet.xlsx"]
+
+# =============================================================================
+# archive files
+# =============================================================================
+
+DENY PROCESSING IF FILE.PATH MATCHES ".zip" OR FILE.PATH MATCHES ".rar" OR FILE.PATH MATCHES REGEX(".*\.(zip|rar|7z|tar|gz)$")
+
+# =============================================================================
+# startswith / endswith examples
+# =============================================================================
+
+DENY PROCESSING IF FILE.PATH STARTSWITH "C:/temp"
+DENY PROCESSING IF FILE.PATH ENDSWITH ".log"
+ALLOW PROCESSING IF FILE.NAME STARTSWITH "report"
+ALLOW PROCESSING IF FILE.NAME ENDSWITH ".pdf"
+DENY EXPLORATION IF DIRECTORY.NAME STARTSWITH "sys"
+DENY EXPLORATION IF DIRECTORY.PATH ENDSWITH "private"

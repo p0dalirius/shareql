@@ -1,0 +1,65 @@
+start: line+
+
+# one line is either a rule optionally followed by an inline comment,
+# or a full-line comment
+line: rule (COMMENT)?        -> line
+    | COMMENT                -> comment
+
+rule: ACTION OPERATION? ("IF" bool_expr)?
+    | "DEFAULT" ":" ACTION -> default_rule
+
+ACTION: "ALLOW" | "DENY"
+
+OPERATION: "ANY"
+         | "PROCESSING"
+         | "EXPLORATION"
+
+FIELD: "FILE.SIZE" 
+     | "FILE.NAME" 
+     | "FILE.MODIFIED_AT" 
+     | "FILE.PATH" 
+     | "FILE.CREATED_AT"
+     | "DIRECTORY.PATH"
+     | "DIRECTORY.NAME"
+     | "DIRECTORY.MODIFIED_AT"
+     | "DIRECTORY.CREATED_AT"
+     | "SHARE.NAME"
+     | "SHARE.DESCRIPTION"
+     | "SHARE.TYPE"
+     | "DEPTH"
+
+OPERATOR: "MATCHES" | "IN" | ">=" | "<=" | "==" | ">" | "<" | "STARTSWITH" | "ENDSWITH" | "CONTAINS"
+
+?bool_expr: or_expr
+?or_expr: and_expr
+        | or_expr "OR" and_expr   -> or_
+?and_expr: not_expr
+         | and_expr "AND" not_expr -> and_
+?not_expr: xor_expr
+         | "NOT" not_expr          -> not_
+?xor_expr: atom
+         | xor_expr "XOR" atom    -> xor
+?atom: condition
+     | "(" bool_expr ")"
+
+condition: FIELD OPERATOR value
+
+value: STRING
+     | REGEX
+     | NUMBER
+     | list
+
+list: "[" [STRING ("," STRING)*] "]"
+
+REGEX: "REGEX" "(" STRING ")"
+
+# accept both single-quoted and double-quoted strings
+STRING: /"([^"\\]|\\.)*"/ | /'([^'\\]|\\.)*'/
+
+NUMBER: /[0-9]+/
+
+%import common.WS
+%ignore WS                   // ignore spaces/tabs
+
+# keep comments as tokens so we can parse comment lines and inline comments
+COMMENT: /#[^\n]*/
