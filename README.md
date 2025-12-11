@@ -187,7 +187,3 @@ shareql --rules rules.txt --validate
 ## Contributing
 
 Pull requests are welcome. Feel free to open an issue if you want to add other features.
-
-## License
-
-This project is licensed under the GPL v2 License - see the [LICENSE](LICENSE) file for details.
